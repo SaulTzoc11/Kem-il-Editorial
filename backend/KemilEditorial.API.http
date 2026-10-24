@@ -1,0 +1,6 @@
+@KemilEditorial.API_HostAddress = http://localhost:5229
+
+GET {{KemilEditorial.API_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
