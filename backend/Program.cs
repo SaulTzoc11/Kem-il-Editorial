@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using KemilEditorial.API.Data;
+using KemilEditorial.API.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
