@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using KemilEditorial.API.Data;
 using KemilEditorial.API.Models;
+using KemilEditorial.API.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -17,10 +18,19 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowReactApp",
-        policy => policy.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());
+        policy =>
+        {
+            policy.WithOrigins("http://localhost:5173")
+                  .AllowAnyHeader()
+                  .AllowAnyMethod();
+        });
 });
 
+builder.Services.AddScoped<DescuentoService>();
+
 var app = builder.Build();
+
+app.UseCors("AllowReactApp");
 
 // 4. Configurar el pipeline de solicitudes HTTP
 if (app.Environment.IsDevelopment())

@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react';
+import { useCart } from '../context/CartContext';
 import axiosClient from '../api/axiosClient';
 
 export default function CatalogoPage() {
   const [libros, setLibros] = useState([]);
   const [loading, setLoading] = useState(true);
+  const { addToCart } = useCart();
 
   useEffect(() => {
     axiosClient.get('/libros')
@@ -17,6 +19,7 @@ export default function CatalogoPage() {
       });
   }, []);
 
+
   if (loading) return <p>Cargando catálogo...</p>;
 
   return (
@@ -27,9 +30,15 @@ export default function CatalogoPage() {
           <div key={libro.idLibro} style={{ border: '1px solid #ccc', padding: '15px', borderRadius: '8px' }}>
             <h3>{libro.nombre}</h3>
             <p>{libro.descripcion}</p>
-            <p><strong>Género:</strong> {libro.nombreGenero}</p>
-            <p><strong>Formato:</strong> {libro.formato}</p>
-            <p><strong>Precio:</strong> Q{libro.precio.toFixed(2)}</p>
+            <span>Género: {libro.nombreGenero}</span>
+            <span>Formato: {libro.formato}</span>
+            <strong>Precio: Q{libro.precio}</strong>
+            <button 
+              onClick={() => addToCart(libro)}
+              style={{ backgroundColor: '#2b6cb0', color: 'white', padding: '8px 12px', border: 'none', borderRadius: '4px', cursor: 'pointer', marginTop: '10px' }}
+            >
+              Añadir al carrito 
+            </button>
           </div>
         ))}
       </div>
