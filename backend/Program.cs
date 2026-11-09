@@ -1,6 +1,9 @@
+using System.Text;
+using System.Threading.RateLimiting;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using KemilEditorial.API.Data;
-using KemilEditorial.API.Models;
 using KemilEditorial.API.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -26,15 +29,61 @@ builder.Services.AddCors(options =>
         });
 });
 
+// 4. Servicios propios
 builder.Services.AddScoped<DescuentoService>();
+builder.Services.AddScoped<TokenService>();
+
+// 5. Autenticación JWT
+var jwtKey = builder.Configuration["Jwt:Key"]
+    ?? throw new InvalidOperationException("Falta Jwt:Key en la configuración.");
+if (jwtKey.Length < 32)
+    throw new InvalidOperationException("Jwt:Key debe tener al menos 32 caracteres.");
+
+builder.Services
+    .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            ValidIssuer = builder.Configuration["Jwt:Issuer"],
+            ValidAudience = builder.Configuration["Jwt:Audience"],
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey)),
+            ClockSkew = TimeSpan.Zero
+        };
+    });
+builder.Services.AddAuthorization();
+
+// 6. Límite de intentos de login: 5 por minuto por IP
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+    options.AddPolicy("login", httpContext =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            httpContext.Connection.RemoteIpAddress?.ToString() ?? "desconocida",
+            _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 5,
+                Window = TimeSpan.FromMinutes(1),
+                QueueLimit = 0
+            }));
+});
 
 var app = builder.Build();
 
-app.UseCors("AllowReactApp");
-
-// 4. Configurar el pipeline de solicitudes HTTP
+// 7. Configurar el pipeline de solicitudes HTTP
 if (app.Environment.IsDevelopment())
 {
+    // Solo desarrollo: convierte las contraseñas falsas del seed en hashes reales
+    using (var scope = app.Services.CreateScope())
+    {
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        await PasswordMigrator.EjecutarAsync(db);
+    }
+
     app.UseSwagger();
     app.UseSwaggerUI();
 }
@@ -44,6 +93,10 @@ app.UseHttpsRedirection();
 // Activar la política de CORS antes de los controladores
 app.UseCors("AllowReactApp");
 
+app.UseRateLimiter();
+
+// ORDEN IMPORTANTE: primero autenticación (¿quién eres?), luego autorización (¿qué puedes hacer?)
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
