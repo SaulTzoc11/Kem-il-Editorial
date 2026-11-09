@@ -49,8 +49,9 @@ export default function CartPage() {
   }
 
   return (
-    <div style={{ padding: '20px', maxWidth: '800px', margin: '0 auto' }}>
-      <h1>Carrito de Compras - Kem'il Editorial</h1>
+    <div className='text-center mb-8'>
+      <h1 className="text-3xl font-bold"> Carrito de Compras</h1>
+      <p className="text-xl text-amber-400 font-semibold mt-1"> Kem'il Editorial</p>
       
       <div style={{ display: 'flex', flexDirection: 'column', gap: '15px', marginTop: '20px' }}>
         {cart.map((item) => (
