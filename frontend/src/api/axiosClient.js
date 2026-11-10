@@ -1,7 +1,8 @@
 import axios from 'axios';
 
+// En desarrollo apunta al backend local. Para otro entorno: crear frontend/.env con VITE_API_URL=...
 const axiosClient = axios.create({
-  baseURL: 'http://localhost:5229/api',
+  baseURL: import.meta.env.VITE_API_URL ?? 'http://localhost:5229/api',
   headers: {
     'Content-Type': 'application/json',
   },
@@ -29,5 +30,15 @@ axiosClient.interceptors.response.use(
     return Promise.reject(error);
   }
 );
+
+// Mensaje legible para mostrar al usuario a partir de un error de axios
+export const mensajeDeError = (error, porDefecto = 'Ocurrió un error. Inténtalo de nuevo.') => {
+  if (!error.response) return 'No hay conexión con el servidor.';
+  if (error.response.status === 403) return 'No tienes permisos para realizar esta acción.';
+  if (error.response.status === 429) return 'Demasiados intentos. Espera un minuto e inténtalo de nuevo.';
+  const data = error.response.data;
+  const validaciones = data?.errors && Object.values(data.errors).flat()[0];
+  return data?.mensaje || validaciones || (typeof data === 'string' && data) || porDefecto;
+};
 
 export default axiosClient;
