@@ -25,7 +25,7 @@ export const AppRouter = () => (
           <Route
             path="/carrito"
             element={
-              <ProtectedRoute roles={[ROLES.MINORISTA, ROLES.INSTITUCIONAL]}>
+<ProtectedRoute roles={[ROLES.MINORISTA, ROLES.MAYORISTA, ROLES.INSTITUCIONAL]}>
                 <CartPage />
               </ProtectedRoute>
             }

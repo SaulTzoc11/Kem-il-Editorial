@@ -11,6 +11,7 @@ import { ROLES, normalizarRol } from '../../utils/roles';
 
 const TARJETAS = [
   [ROLES.ADMIN, 'Acceso total al sistema'],
+  [ROLES.MAYORISTA, 'Compras por volumen'],
   [ROLES.ASESOR, 'Cotizaciones y clientes'],
   [ROLES.INSTITUCIONAL, 'Compras por volumen'],
   [ROLES.MINORISTA, 'Compras individuales'],
