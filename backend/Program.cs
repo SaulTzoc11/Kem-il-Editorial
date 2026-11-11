@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using KemilEditorial.API.Data;
 using KemilEditorial.API.Services;
+using Microsoft.AspNetCore.Authorization;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -55,7 +56,13 @@ builder.Services
             ClockSkew = TimeSpan.Zero
         };
     });
-builder.Services.AddAuthorization();
+builder.Services.AddAuthorization(options =>
+{
+    // Denegar por defecto: todo endpoint exige sesión, salvo los marcados [AllowAnonymous]
+    options.FallbackPolicy = new AuthorizationPolicyBuilder()
+        .RequireAuthenticatedUser()
+        .Build();
+});
 
 // 6. Límite de intentos de login: 5 por minuto por IP
 builder.Services.AddRateLimiter(options =>
@@ -77,13 +84,6 @@ var app = builder.Build();
 // 7. Configurar el pipeline de solicitudes HTTP
 if (app.Environment.IsDevelopment())
 {
-    // Solo desarrollo: convierte las contraseñas falsas del seed en hashes reales
-    using (var scope = app.Services.CreateScope())
-    {
-        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-        await PasswordMigrator.EjecutarAsync(db);
-    }
-
     app.UseSwagger();
     app.UseSwaggerUI();
 }

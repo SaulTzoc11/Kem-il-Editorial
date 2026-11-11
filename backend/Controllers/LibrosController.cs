@@ -1,5 +1,7 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using KemilEditorial.API.Auth;
 using KemilEditorial.API.Data;
 using KemilEditorial.API.DTOs;
 using KemilEditorial.API.Models;
@@ -17,7 +19,9 @@ namespace KemilEditorial.API.Controllers
             _context = context;
         }
 
+        // El catálogo es público: cualquier visitante puede verlo
         [HttpGet]
+        [AllowAnonymous]
         public async Task<ActionResult<IEnumerable<LibroDto>>> GetLibros()
         {
             var libros = await _context.Libros
@@ -38,7 +42,9 @@ namespace KemilEditorial.API.Controllers
             return Ok(libros);
         }
 
+        // Solo un Administrador puede agregar libros al catálogo
         [HttpPost]
+        [Authorize(Roles = Roles.Administrador)]
         public async Task<ActionResult> CrearLibro([FromBody] CrearLibroDto dto)
         {
             var nuevoLibro = new Libro

@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using KemilEditorial.API.DTOs;
 using KemilEditorial.API.Services;
@@ -15,7 +16,10 @@ namespace KemilEditorial.API.Controllers
             _descuentoService = descuentoService;
         }
 
+        // Solo calcula totales, no modifica datos: queda público para que
+        // el carrito funcione también para visitantes
         [HttpPost("calcular")]
+        [AllowAnonymous]
         public IActionResult Calcular([FromBody] CalcularOrdenRequestDto request)
         {
             if (request.Items == null || !request.Items.Any())
