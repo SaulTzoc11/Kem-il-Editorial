@@ -9,8 +9,8 @@ export const ordenesApi = {
     });
     return data;
   },
-  // POST api/ordenes -> cierre de orden (RF-03.3). PENDIENTE en el backend.
-  // Debe recalcular precios y descuento en el servidor y devolver { idFactura, ...resumen }.
+  // POST api/ordenes -> cierre de orden (RF-03.3). Solo se envía idLibro y cantidad: el servidor toma el
+  // precio de la BD, calcula el descuento según el rol del token y devuelve { idFactura, estado, ...resumen }.
   crear: async (items) => {
     const { data } = await axiosClient.post('/ordenes', {
       items: items.map(({ idLibro, cantidad }) => ({ idLibro, cantidad })),
@@ -22,6 +22,6 @@ export const ordenesApi = {
     const { data } = await axiosClient.get('/ordenes', { params: estado ? { estado } : undefined });
     return data;
   },
-  // GET api/ordenes/mis-pedidos -> historial del cliente. PENDIENTE.
+  // GET api/ordenes/mis-pedidos -> historial del cliente autenticado.
   misPedidos: async () => (await axiosClient.get('/ordenes/mis-pedidos')).data,
 };

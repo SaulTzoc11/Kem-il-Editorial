@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using KemilEditorial.API.Data;
+using KemilEditorial.API.Models;
 using KemilEditorial.API.Services;
 using Microsoft.AspNetCore.Authorization;
 
@@ -32,6 +33,7 @@ builder.Services.AddCors(options =>
 
 // 4. Servicios propios
 builder.Services.AddScoped<DescuentoService>();
+builder.Services.AddScoped<OrdenService>();
 builder.Services.AddScoped<TokenService>();
 
 // 5. Autenticación JWT

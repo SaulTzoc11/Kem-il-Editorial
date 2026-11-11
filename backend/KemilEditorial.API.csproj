@@ -7,7 +7,13 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <!-- El proyecto de pruebas vive dentro de esta carpeta: que la API no compile sus archivos -->
+    <Compile Remove="KemilEditorial.Tests/**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="BCrypt.Net-Next" Version="4.2.0" />
+    <PackageReference Include="System.Security.Cryptography.Pkcs" Version="10.0.13" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.5" />
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.5" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.13">

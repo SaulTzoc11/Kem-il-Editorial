@@ -12,9 +12,17 @@ namespace KemilEditorial.API.Data
                 public DbSet<Usuario> Usuarios { get; set; }
         public DbSet<Rol> Roles { get; set; }
 
+        // Facturación e inventario (mapeo en Data/Configurations)
+        public DbSet<Factura> Facturas { get; set; }
+        public DbSet<DetalleFactura> DetallesFactura { get; set; }
+        public DbSet<InventarioLibro> Inventarios { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
+
+            // Aplica todas las clases IEntityTypeConfiguration<> del proyecto (Data/Configurations)
+            modelBuilder.ApplyConfigurationsFromAssembly(typeof(AppDbContext).Assembly);
             
             // Mapeo exacto de la tabla y columnas de Libro
             modelBuilder.Entity<Libro>().ToTable("libro");
