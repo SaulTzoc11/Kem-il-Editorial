@@ -12,5 +12,6 @@ namespace KemilEditorial.API.Auth
         // Combinaciones para [Authorize(Roles = ...)]
         public const string Personal = Administrador + "," + Asesor;
         public const string Compradores = Cliente + "," + Mayorista + "," + Institucional;
+        public const string SolicitantesCotizacion = Mayorista + "," + Institucional;
     }
 }
