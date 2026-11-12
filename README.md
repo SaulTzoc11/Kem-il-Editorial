@@ -83,7 +83,7 @@ En la base los estados son `Pendiente`, `En revision`, `Cotizada`, `Aprobada` y 
 | PUT | `/api/usuarios/{id}/estado` | Administrador |
 | GET | `/api/roles` | Administrador |
 | POST | `/api/cotizaciones` | Mayorista, Institucional |
-| GET | `/api/cotizaciones` | Asesor, Administrador |
+| GET | `/api/cotizaciones/bandeja` | Asesor, Administrador |
 | PUT | `/api/cotizaciones/{id}/responder` | Asesor, Administrador |
 | GET | `/api/admin/resumen` | Administrador |
 | GET | `/api/ordenes?estado=` | Administrador |
