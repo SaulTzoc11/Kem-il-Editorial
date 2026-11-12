@@ -4,7 +4,9 @@ export const formatoQ = (valor) => moneda.format(Number(valor) || 0);
 
 export const formatoFecha = (valor) => {
   if (!valor) return '—';
-  const fecha = new Date(valor);
+  // "2026-11-11" (solo fecha) se interpreta como UTC y se muestra un día antes; se fuerza a hora local
+  const soloFecha = /^\d{4}-\d{2}-\d{2}$/.test(valor);
+  const fecha = new Date(soloFecha ? `${valor}T00:00:00` : valor);
   if (Number.isNaN(fecha.getTime())) return String(valor);
   return fecha.toLocaleDateString('es-GT', { day: 'numeric', month: 'short', year: 'numeric' });
 };
