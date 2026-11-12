@@ -35,6 +35,7 @@ namespace KemilEditorial.API.Controllers
                     Formato = l.Formato,
                     Precio = l.Precio,
                     ISBN = l.ISBN,
+                    Portada = l.Portada,
                     NombreGenero = l.Genero != null ? l.Genero.Nombre : "Sin categoría"
                 })
                 .ToListAsync();

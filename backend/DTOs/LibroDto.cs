@@ -10,6 +10,7 @@ namespace KemilEditorial.API.DTOs
         public decimal Precio { get; set; }
         public string ISBN { get; set; } = string.Empty;
         public string NombreGenero { get; set; } = string.Empty;
+        public string? Portada { get; set; }
     }
 
     public class CrearLibroDto

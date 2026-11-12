@@ -10,6 +10,7 @@ namespace KemilEditorial.API.Models
         public string Formato { get; set; } = string.Empty; // "Tapa dura", "E-book", etc.
         public decimal Precio { get; set; }
         public string ISBN { get; set; } = string.Empty;
+        public string? Portada { get; set; }
         public bool Estado { get; set; }
 
         // Propiedades de navegación (si se usa EF Core)

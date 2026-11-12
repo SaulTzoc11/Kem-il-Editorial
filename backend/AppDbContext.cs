@@ -16,7 +16,6 @@ namespace KemilEditorial.API.Data
         public DbSet<Factura> Facturas { get; set; }
         public DbSet<DetalleFactura> DetallesFactura { get; set; }
         public DbSet<InventarioLibro> Inventarios { get; set; }
-                public DbSet<Cotizacion> Cotizaciones { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -36,6 +35,7 @@ namespace KemilEditorial.API.Data
             modelBuilder.Entity<Libro>().Property(l => l.Formato).HasColumnName("formato");
             modelBuilder.Entity<Libro>().Property(l => l.Precio).HasColumnName("precio");
             modelBuilder.Entity<Libro>().Property(l => l.ISBN).HasColumnName("ISBN");
+            modelBuilder.Entity<Libro>().Property(l => l.Portada).HasColumnName("portada");
             modelBuilder.Entity<Libro>().Property(l => l.Estado).HasColumnName("estado");
 
             // Mapeo exacto de la tabla y columnas de Genero
