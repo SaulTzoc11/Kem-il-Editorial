@@ -7,6 +7,7 @@ using KemilEditorial.API.Data;
 using KemilEditorial.API.Models;
 using KemilEditorial.API.Services;
 using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -56,6 +57,33 @@ builder.Services
             ValidAudience = builder.Configuration["Jwt:Audience"],
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey)),
             ClockSkew = TimeSpan.Zero
+        };
+
+        // Revalida contra la BD en cada petición: si la cuenta se desactivó o cambió
+        // de rol, el token anterior deja de servir de inmediato.
+        options.Events = new JwtBearerEvents
+        {
+            OnTokenValidated = async context =>
+            {
+                var idClaim = context.Principal?.FindFirstValue(ClaimTypes.NameIdentifier);
+                var rolClaim = context.Principal?.FindFirstValue(ClaimTypes.Role);
+
+                if (!int.TryParse(idClaim, out var id))
+                {
+                    context.Fail("Token inválido.");
+                    return;
+                }
+
+                var db = context.HttpContext.RequestServices.GetRequiredService<AppDbContext>();
+                var actual = await db.Usuarios
+                    .AsNoTracking()
+                    .Where(u => u.IdUsuario == id)
+                    .Select(u => new { u.Estado, Rol = u.Rol!.NombreRol })
+                    .FirstOrDefaultAsync();
+
+                if (actual is null || !actual.Estado || actual.Rol != rolClaim)
+                    context.Fail("Sesión inválida: cuenta desactivada o rol modificado.");
+            }
         };
     });
 builder.Services.AddAuthorization(options =>
