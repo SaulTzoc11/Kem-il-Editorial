@@ -9,6 +9,7 @@ namespace KemilEditorial.API.Data
 
         public DbSet<Libro> Libros { get; set; }
         public DbSet<Genero> Generos { get; set; }
+        public DbSet<Editorial> Editoriales { get; set; }
                 public DbSet<Usuario> Usuarios { get; set; }
         public DbSet<Rol> Roles { get; set; }
 
@@ -44,6 +45,12 @@ namespace KemilEditorial.API.Data
             modelBuilder.Entity<Genero>().HasKey(g => g.IdGenero);
             modelBuilder.Entity<Genero>().Property(g => g.IdGenero).HasColumnName("id_genero");
             modelBuilder.Entity<Genero>().Property(g => g.Nombre).HasColumnName("nombre");
+
+            // Mapeo de la tabla editorial
+            modelBuilder.Entity<Editorial>().ToTable("editorial");
+            modelBuilder.Entity<Editorial>().HasKey(e => e.IdEditorial);
+            modelBuilder.Entity<Editorial>().Property(e => e.IdEditorial).HasColumnName("id_editorial");
+            modelBuilder.Entity<Editorial>().Property(e => e.Nombre).HasColumnName("nombre");
 
             // Relación
             modelBuilder.Entity<Libro>()

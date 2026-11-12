@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { adminApi } from '../../api/adminApi';
 import { mensajeDeError } from '../../api/axiosClient';
 import { estadoDeStock, librosApi } from '../../api/librosApi';
@@ -11,6 +11,8 @@ import useModal from '../../hooks/useModal';
 import { formatoQ, normalizarTexto } from '../../utils/format';
 
 const FORMATOS = ['Tapa blanda', 'Tapa dura', 'E-book'];
+const TIPOS_PORTADA = ['image/jpeg', 'image/png', 'image/webp'];
+const PORTADA_MAX_BYTES = 2 * 1024 * 1024;
 
 const formularioDe = (libro) => ({
   nombre: libro?.nombre ?? '',
@@ -22,11 +24,9 @@ const formularioDe = (libro) => ({
   idEditorial: libro?.idEditorial ?? '',
   stock: libro?.stock ?? '',
   autor: libro?.autor ?? '',
-  portada: libro?.portada ?? '',
 });
 
-// RF-05.1 CRUD de catálogo. Leer y crear usan endpoints existentes; editar y eliminar (lógico)
-// llaman PUT/DELETE api/libros/{id}, que el backend debe agregar.
+// RF-05.1 CRUD de catálogo: GET/POST/PUT/DELETE api/libros (eliminación lógica) y portada en api/libros/{id}/portada.
 export default function CatalogoAdmin() {
   const { notify } = useUI();
   const { data: libros, loading, error, reload } = useApi(librosApi.listar);
@@ -151,17 +151,39 @@ function LibroForm({ libro, onClose, onSaved }) {
   const [form, setForm] = useState(() => formularioDe(libro));
   const [error, setError] = useState('');
   const [guardando, setGuardando] = useState(false);
+  const [archivo, setArchivo] = useState(null); // portada nueva elegida (se sube al guardar)
   const { data: generos, usingMock: generosMock } = useApi(adminApi.generos, { fallback: mockGeneros });
   const { data: editoriales } = useApi(adminApi.editoriales, { fallback: mockEditoriales });
   useModal(true, onClose);
 
   const cambiar = (e) => setForm({ ...form, [e.target.name]: e.target.value });
 
+  // Vista previa de la portada elegida; libera la URL temporal al cambiarla o cerrar el formulario
+  const vistaPrevia = useMemo(() => (archivo ? URL.createObjectURL(archivo) : null), [archivo]);
+  useEffect(() => () => vistaPrevia && URL.revokeObjectURL(vistaPrevia), [vistaPrevia]);
+
+  const elegirPortada = (e) => {
+    const elegido = e.target.files?.[0];
+    e.target.value = ''; // permite volver a elegir el mismo archivo
+    if (!elegido) return;
+    if (!TIPOS_PORTADA.includes(elegido.type)) {
+      setError('La portada debe ser una imagen JPG, PNG o WebP.');
+      return;
+    }
+    if (elegido.size > PORTADA_MAX_BYTES) {
+      setError('La portada no puede pesar más de 2 MB.');
+      return;
+    }
+    setError('');
+    setArchivo(elegido);
+  };
+
   const guardar = async (e) => {
     e.preventDefault();
     setError('');
     setGuardando(true);
-    // Los campos stock/autor/portada se envían ya; el backend los ignora hasta que el DTO los incluya.
+    // stock (existencias totales) y autor (varios separados por coma) los guarda el backend.
+    // La portada se sube aparte, con el id del libro, después de guardar la ficha.
     const payload = {
       ...form,
       precio: Number(form.precio),
@@ -170,8 +192,19 @@ function LibroForm({ libro, onClose, onSaved }) {
       stock: form.stock === '' ? null : Number(form.stock),
     };
     try {
-      if (libro) await librosApi.actualizar(libro.idLibro, payload);
-      else await librosApi.crear(payload);
+      const { data } = libro
+        ? await librosApi.actualizar(libro.idLibro, payload)
+        : await librosApi.crear(payload);
+      if (archivo) {
+        try {
+          await librosApi.subirPortada(data.idLibro, archivo);
+        } catch (errPortada) {
+          // La ficha ya quedó guardada: se cierra el formulario y se avisa; la portada se puede subir editando el libro.
+          notify(`Libro guardado, pero la portada no se subió: ${mensajeDeError(errPortada, 'error desconocido.')}`, 'error');
+          onSaved();
+          return;
+        }
+      }
       notify(libro ? 'Libro actualizado' : 'Libro creado con éxito');
       onSaved();
     } catch (err) {
@@ -205,7 +238,13 @@ function LibroForm({ libro, onClose, onSaved }) {
           <div className="form-row">
             <label>
               <span>Autor</span>
-              <input name="autor" onChange={cambiar} value={form.autor} />
+              <input
+                maxLength={300}
+                name="autor"
+                onChange={cambiar}
+                placeholder="Varios autores separados por coma"
+                value={form.autor}
+              />
             </label>
             <label>
               <span>ISBN</span>
@@ -251,13 +290,30 @@ function LibroForm({ libro, onClose, onSaved }) {
             </label>
             <label>
               <span>Stock</span>
-              <input min="0" name="stock" onChange={cambiar} type="number" value={form.stock} />
+              <input
+                disabled={form.formato === 'E-book'}
+                max="1000000"
+                min="0"
+                name="stock"
+                onChange={cambiar}
+                placeholder={form.formato === 'E-book' ? 'No aplica' : ''}
+                step="1"
+                type="number"
+                value={form.formato === 'E-book' ? '' : form.stock}
+              />
             </label>
           </div>
           <label>
-            <span>URL de portada</span>
-            <input name="portada" onChange={cambiar} placeholder="https://..." value={form.portada} />
+            <span>Portada (JPG, PNG o WebP, máx. 2 MB)</span>
+            <input accept={TIPOS_PORTADA.join(',')} onChange={elegirPortada} type="file" />
           </label>
+          {(vistaPrevia || libro?.portada) && (
+            <img
+              alt="Vista previa de la portada"
+              src={vistaPrevia ?? libro.portada}
+              style={{ maxHeight: 160, borderRadius: 6, justifySelf: 'start' }}
+            />
+          )}
           <label>
             <span>Sinopsis</span>
             <textarea name="descripcion" onChange={cambiar} rows={3} value={form.descripcion} />

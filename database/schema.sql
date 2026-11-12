@@ -63,7 +63,7 @@ CREATE TABLE usuarios (
     id_rol INT NOT NULL,
     nombre VARCHAR(150) NOT NULL,
     correo VARCHAR(150) NOT NULL UNIQUE,
-    contraseña VARCHAR(255) NOT NULL,
+    password_hash VARCHAR(255) NOT NULL, -- hash BCrypt, nunca la contraseña en texto plano
     fecha_registro DATE DEFAULT GETDATE(),
     estado BIT NOT NULL DEFAULT 1,
     CONSTRAINT FK_usuarios_rol FOREIGN KEY (id_rol) REFERENCES rol(id_rol)
@@ -101,7 +101,7 @@ CREATE TABLE factura (
     descuento_aplicado VARCHAR(100) NULL,
     impuestos DECIMAL(10,2) NOT NULL,
     total_final DECIMAL(10,2) NOT NULL,
-    estado VARCHAR(50) DEFAULT 'Emitida',
+    estado VARCHAR(50) DEFAULT 'Pendiente', -- Pendiente, Aprobado, Enviado, Cancelado
     descuento_volumen_pct DECIMAL(5,2) DEFAULT 0.00,
     descuento_cliente_pct DECIMAL(5,2) DEFAULT 0.00,
     monto_descuento DECIMAL(10,2) DEFAULT 0.00,
@@ -158,7 +158,9 @@ CREATE TABLE cotizaciones (
     observaciones_asesor TEXT NULL,
     comentarios_cliente TEXT NULL,
     estado VARCHAR(50) DEFAULT 'Pendiente',
-    CONSTRAINT FK_cotizaciones_usuario FOREIGN KEY (id_usuario) REFERENCES usuarios(id_usuario)
+    CONSTRAINT FK_cotizaciones_usuario FOREIGN KEY (id_usuario) REFERENCES usuarios(id_usuario),
+    CONSTRAINT FK_cotizaciones_asesor FOREIGN KEY (id_asesor) REFERENCES usuarios(id_usuario),
+    CONSTRAINT CK_cotizaciones_estado CHECK (estado IN ('Pendiente', 'En revision', 'Cotizada', 'Aprobada', 'Rechazada'))
 );
 GO
 

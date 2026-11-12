@@ -11,6 +11,9 @@ namespace KemilEditorial.API.Models
         public decimal Precio { get; set; }
         public string ISBN { get; set; } = string.Empty;
         public string? Portada { get; set; }
+        public DateTime? FechaLanzamiento { get; set; }
+        public string? Edicion { get; set; }
+        public decimal? Valoracion { get; set; }
         public bool Estado { get; set; }
 
         // Propiedades de navegación (si se usa EF Core)

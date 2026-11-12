@@ -34,8 +34,8 @@ INSERT INTO stock (nombre, ubicacion, descripcion) VALUES
 ('Bodega Central Totonicapán', 'Zona 1, Totonicapán', 'Almacén principal de libros impresos');
 GO
 
--- 6. Usuarios de prueba (Nota: La contraseña en producción debe ir hasheada)
-INSERT INTO usuarios (id_rol, nombre, correo, contraseña, estado) VALUES 
+-- 6. Usuarios iniciales (el hash de estos dos NO es BCrypt válido: para iniciar sesión usa database/usuarios_prueba.sql)
+INSERT INTO usuarios (id_rol, nombre, correo, password_hash, estado) VALUES 
 (1, 'Saúl De León', 'saul@kemileditorial.com', 'hashed_password_saul', 1),
 (2, 'Juan Pérez', 'juan.perez@example.com', 'hashed_password_juan', 1);
 GO

@@ -7,6 +7,7 @@ using KemilEditorial.API.Data;
 using KemilEditorial.API.Models;
 using KemilEditorial.API.Services;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.Extensions.FileProviders;
 using System.Security.Claims;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -36,6 +37,12 @@ builder.Services.AddCors(options =>
 builder.Services.AddScoped<DescuentoService>();
 builder.Services.AddScoped<OrdenService>();
 builder.Services.AddScoped<TokenService>();
+
+// Portadas subidas desde el panel: se guardan en backend/uploads/portadas y se sirven en /uploads/portadas
+var carpetaUploads = Path.Combine(builder.Environment.ContentRootPath, "uploads");
+var carpetaPortadas = Path.Combine(carpetaUploads, "portadas");
+Directory.CreateDirectory(carpetaPortadas);
+builder.Services.AddScoped(sp => new LibroService(sp.GetRequiredService<AppDbContext>(), carpetaPortadas));
 
 // 5. Autenticación JWT
 var jwtKey = builder.Configuration["Jwt:Key"]
@@ -119,6 +126,14 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+// Sirve las portadas subidas (público: son imágenes del catálogo). nosniff evita que el navegador las reinterprete.
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = new PhysicalFileProvider(carpetaUploads),
+    RequestPath = "/uploads",
+    OnPrepareResponse = ctx => ctx.Context.Response.Headers["X-Content-Type-Options"] = "nosniff"
+});
 
 // Activar la política de CORS antes de los controladores
 app.UseCors("AllowReactApp");

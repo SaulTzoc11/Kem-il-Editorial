@@ -14,4 +14,10 @@ namespace KemilEditorial.API.Models
     {
         public StockInsuficienteException(string mensaje) : base(mensaje) { }
     }
+
+    /// <summary>Se lanza cuando el recurso pedido no existe. El controlador la traduce a HTTP 404.</summary>
+    public class NoEncontradoException : Exception
+    {
+        public NoEncontradoException(string mensaje) : base(mensaje) { }
+    }
 }
