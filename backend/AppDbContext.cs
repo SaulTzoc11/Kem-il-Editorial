@@ -15,7 +15,8 @@ namespace KemilEditorial.API.Data
         // Facturación e inventario (mapeo en Data/Configurations)
         public DbSet<Factura> Facturas { get; set; }
         public DbSet<DetalleFactura> DetallesFactura { get; set; }
-        public DbSet<InventarioLibro> Inventarios { get; set; }
+         public DbSet<InventarioLibro> Inventarios { get; set; }
+          public DbSet<Cotizacion> Cotizaciones { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
