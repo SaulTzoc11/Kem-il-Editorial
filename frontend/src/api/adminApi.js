@@ -10,6 +10,12 @@ export const adminApi = {
   // GET api/roles (PENDIENTE) -> [{ idRol, nombreRol }]
   roles: async () => (await axiosClient.get('/roles')).data,
 
+    // PUT api/usuarios/{id}/rol -> { idRol }
+  cambiarRol: (id, idRol) => axiosClient.put(`/usuarios/${id}/rol`, { idRol }),
+
+  // PUT api/usuarios/{id}/estado -> { estado: true | false }
+  cambiarEstado: (id, estado) => axiosClient.put(`/usuarios/${id}/estado`, { estado }),
+  
   // GET api/generos y api/editoriales (PENDIENTES) para los selects del formulario de libros
   generos: async () => (await axiosClient.get('/generos')).data,
   editoriales: async () => (await axiosClient.get('/editoriales')).data,

@@ -8,6 +8,7 @@ import { mockRoles, mockUsuarios } from '../../data/mockPortal';
 import useApi from '../../hooks/useApi';
 import useModal from '../../hooks/useModal';
 import { ROLES, normalizarRol } from '../../utils/roles';
+import { useAuth } from '../../context/AuthContext';
 
 const TARJETAS = [
   [ROLES.ADMIN, 'Acceso total al sistema'],
@@ -20,11 +21,39 @@ const TARJETAS = [
 // RF-02 / RF-05: administración de usuarios y roles. POST api/auth/usuarios ya existe;
 // el listado (GET api/usuarios) y la lista de roles (GET api/roles) están pendientes.
 export default function UsuariosAdmin() {
+  const { user } = useAuth();
+  const { notify } = useUI();
   const { data: usuarios, usingMock, reload } = useApi(adminApi.usuarios, { fallback: mockUsuarios });
+  const { data: roles } = useApi(adminApi.roles, { fallback: mockRoles });
   const [creando, setCreando] = useState(false);
+  const [trabajando, setTrabajando] = useState(null);
 
   const lista = usuarios ?? [];
   const cuenta = (rol) => lista.filter((u) => normalizarRol(u.rol) === rol).length;
+  const idRolDe = (u) => (roles ?? []).find((r) => r.nombreRol === u.rol)?.idRol ?? '';
+
+  const ejecutar = async (idUsuario, accion, mensaje) => {
+    setTrabajando(idUsuario);
+    try {
+      await accion();
+      notify(mensaje);
+      reload();
+    } catch (err) {
+      notify(mensajeDeError(err, 'No se pudo completar la acción.'), 'error');
+    } finally {
+      setTrabajando(null);
+    }
+  };
+
+  const cambiarRol = (u, idRol) =>
+    ejecutar(u.idUsuario, () => adminApi.cambiarRol(u.idUsuario, Number(idRol)), `Rol de ${u.nombre} actualizado`);
+
+  const cambiarEstado = (u) =>
+    ejecutar(
+      u.idUsuario,
+      () => adminApi.cambiarEstado(u.idUsuario, !u.estado),
+      u.estado ? `${u.nombre} desactivado` : `${u.nombre} activado`
+    );
 
   return (
     <>
@@ -59,21 +88,52 @@ export default function UsuariosAdmin() {
                 <th>Correo</th>
                 <th>Rol</th>
                 <th>Estado</th>
+                <th>Acciones</th>
               </tr>
             </thead>
             <tbody>
-              {lista.map((u) => (
-                <tr key={u.idUsuario}>
-                  <td>
-                    <strong>{u.nombre}</strong>
-                  </td>
-                  <td>{u.correo}</td>
-                  <td>{normalizarRol(u.rol)}</td>
-                  <td>
-                    <StatusBadge>{u.estado ? 'Aprobado' : 'Cancelado'}</StatusBadge>
-                  </td>
-                </tr>
-              ))}
+              {lista.map((u) => {
+                const esYo = u.idUsuario === user?.idUsuario;
+                const bloqueado = usingMock || trabajando === u.idUsuario;
+                return (
+                  <tr key={u.idUsuario}>
+                    <td>
+                      <strong>{u.nombre}</strong>
+                    </td>
+                    <td>{u.correo}</td>
+                    <td>
+                      <select
+                        aria-label={`Rol de ${u.nombre}`}
+                        disabled={bloqueado || esYo}
+                        onChange={(e) => cambiarRol(u, e.target.value)}
+                        value={idRolDe(u)}
+                      >
+                        {(roles ?? []).map((r) => (
+                          <option key={r.idRol} value={r.idRol}>
+                            {normalizarRol(r.nombreRol)}
+                          </option>
+                        ))}
+                      </select>
+                    </td>
+                    <td>
+                      <StatusBadge>{u.estado ? 'Aprobado' : 'Cancelado'}</StatusBadge>
+                    </td>
+                    <td>
+                      {esYo ? (
+                        <small>Tu cuenta</small>
+                      ) : (
+                        <button
+                          className={`portal-secondary ${u.estado ? 'is-danger' : ''}`}
+                          disabled={bloqueado}
+                          onClick={() => cambiarEstado(u)}
+                        >
+                          {u.estado ? 'Desactivar' : 'Activar'}
+                        </button>
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
